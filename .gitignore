@@ -1,0 +1,11 @@
+#git ignore
+
+*.env
+*.log
+*venv/
+*.vscode/
+*.idea/
+*.DS_Store
+*.pyc
+__pycache__/
+dist/
