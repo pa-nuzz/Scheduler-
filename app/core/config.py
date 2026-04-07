@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     Gemini_API_KEY: str
     Groq_API_KEY: str
 
-    #Vector DB (Qdrant)
-    QDRANT_API_KEY: str = "http://localhost:6333"
-    COLLECTION_NAME: str = "palm_docs"
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_API_KEY: str
+    Collection_NAME: str = "palm_collection"
 
     #Redis
     REDIS_HOST: str = "redis://localhost:6379"
