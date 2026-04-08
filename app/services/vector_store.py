@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from app.core.config import settings
@@ -38,7 +39,7 @@ class VectorStoreService:
         """
         Store document chunks and their embeddings in qdrant
         """
-        self._ensure_collection()
+        await asyncio.to_thread(self._ensure_collection)
 
         points = [
             PointStruct(
@@ -51,7 +52,8 @@ class VectorStoreService:
 
         # Upload in small batches to avoid timeouts
         for i in range(0, len(points), UPSERT_BATCH_SIZE):
-            self.client.upsert(
+            await asyncio.to_thread(
+                self.client.upsert,
                 collection_name=self.collection_name,
                 points=points[i:i + UPSERT_BATCH_SIZE],
             )
@@ -61,9 +63,10 @@ class VectorStoreService:
         Find the top-K most similar chunks to the query vector.
         retrival step in rag for closestmeaning 
         """
-        self._ensure_collection()
+        await asyncio.to_thread(self._ensure_collection)
 
-        response = self.client.query_points(
+        response = await asyncio.to_thread(
+            self.client.query_points,
             collection_name=self.collection_name,
             query=query_vector,
             limit=top_k,
