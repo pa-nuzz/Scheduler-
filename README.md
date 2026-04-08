@@ -10,7 +10,6 @@ This ia a backend api for uploading documents and conversational rag and intervi
    - **Booking Mode**: Book interviews via llm. It  extracts name, email, date, and time.
 
 ## Architecture
-
 ![alt text](palmarchi.png)
 
 ### Tech Stack
