@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Palm RAG API",
+    title="Scheduler RAG API",
     description="Document ingestion and conversational RAG with interview booking",
     version="1.0.0",
     lifespan=lifespan
@@ -25,11 +25,13 @@ app.include_router(chat.router, prefix="/chat", tags=["chat"])
 @app.get("/")
 async def root():
     return {
-        "name": "Palm RAG API",
+        "name": "Scheduler RAG API",
         "endpoints": [
             "POST /ingest/upload - Upload PDF/TXT documents",
+            "GET  /ingest/documents - List ingested document metadata",
             "POST /chat - RAG Q&A or interview booking",
             "GET  /chat/history/{session_id} - Get chat history",
+            "DELETE /chat/history/{session_id} - Delete chat history",
             "GET  /chat/bookings - List all bookings"
         ]
     }
