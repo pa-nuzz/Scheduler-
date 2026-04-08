@@ -3,9 +3,9 @@ This ia a backend api for uploading documents and conversational rag and intervi
 
 ## About the project
 
-1. **Document upload and **: Upload pdf or txt files, extract text and split into chunks and generate embeddings and store in qdrant cloud for similarity search and save metadata in sqlite.(db can be upgraded)
+1. Document upload and : Upload pdf or txt files, extract text and split into chunks and generate embeddings and store in qdrant cloud for similarity search and save metadata in sqlite.(db can be upgraded)
 
-2. **Chat and interview booking **: Two modes:
+2. Chat and interview booking : Two modes:
    - **RAG Mode**: Ask questions about uploaded document.The system retrieves relevant chunks info and generate answers.
    - **Booking Mode**: Book interviews via llm. It  extracts name, email, date, and time.
 
