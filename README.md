@@ -32,10 +32,10 @@ Install dependencies:
 pip install -r requirements.txt
 
 .env:
-QDRANT_URL=...
-QDRANT_API_KEY=...
-GOOGLE_API_KEY=...
-GROQ_API_KEY=...
+QDRANT_URL=...,
+QDRANT_API_KEY=...,
+GOOGLE_API_KEY=...,
+GROQ_API_KEY=...,
 REDIS_URL=redis://user:pass@host:port
 
 Run the server:
