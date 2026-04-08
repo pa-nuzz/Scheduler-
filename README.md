@@ -13,10 +13,10 @@ This ia a backend api for uploading documents and conversational rag and intervi
 ![alt text](palmarchi.png)
 
 ### Tech Stack
-Fastapi - api framework
-sqlite - metadata and booking
-Qdrant - vector store
-Redis cloud - chat session memory
+Fastapi - (api framework)
+sqlite - (metadata and booking)
+Qdrant - (vector store)
+Redis cloud - (chat session memory)
 llm- gemini(primary), if fallback->(Groq)
 
 ## API Endpoints
