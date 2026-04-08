@@ -11,8 +11,7 @@ This ia a backend api for uploading documents and conversational rag and intervi
 
 ## Architecture
 
-/Users/danuzz/Desktop/palmarchi.png
-
+![alt text](palmarchi.png)
 
 ### Tech Stack
 Fastapi - api framework
