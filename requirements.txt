@@ -4,7 +4,7 @@ python-multipart
 pydantic-settings
 email-validator
 pymupdf
-google-generativeai
+google-genai
 groq
 qdrant-client
 redis
@@ -12,3 +12,5 @@ sqlalchemy
 aiosqlite
 greenlet
 python-dotenv
+requests>=2.32.3,<3.0.0
+urllib3<3.0.0
