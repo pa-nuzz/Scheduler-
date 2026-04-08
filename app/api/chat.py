@@ -19,6 +19,16 @@ llm = LLMService()
 rag = RAGPipeline(embedder, vector_store, memory, llm)
 
 
+def _validate_session_id(session_id: str) -> str:
+    """Normalize and validate session IDs used for Redis chat memory keys."""
+    normalized = session_id.strip()
+    if not normalized:
+        raise HTTPException(status_code=400, detail="session_id cannot be empty")
+    if len(normalized) > 128:
+        raise HTTPException(status_code=400, detail="session_id is too long (max 128 chars)")
+    return normalized
+
+
 async def detect_intent(message: str) -> str:
     """
     Auto-detect if the user wants to book an interview or ask a question.
@@ -92,6 +102,8 @@ async def chat(request: ChatRequest):
                       
     """
     
+    valid_session_id = _validate_session_id(request.session_id)
+
     # detect mode if mode is not provided
     mode = request.mode
     if mode is None:
@@ -100,10 +112,10 @@ async def chat(request: ChatRequest):
     # ── RAG MODE ──────────────────────────────────────────────────────────────
     if mode == "rag":
         try:
-            result = await rag.run(request.message, request.session_id)
+            result = await rag.run(request.message, valid_session_id)
             return ChatResponse(
                 answer=result["answer"],
-                session_id=request.session_id,
+                session_id=valid_session_id,
                 mode="rag",
                 sources=result.get("sources", []),
             )
@@ -126,10 +138,10 @@ async def chat(request: ChatRequest):
                     f"To book your interview I still need: {', '.join(missing)}.\n"
                     "Please provide: name, email, date (YYYY-MM-DD), and time (HH:MM)."
                 )
-                await memory.save(request.session_id, request.message, msg)
+                await memory.save(valid_session_id, request.message, msg)
                 return ChatResponse(
                     answer=msg,
-                    session_id=request.session_id,
+                    session_id=valid_session_id,
                     mode="booking",
                     booking=None,
                 )
@@ -146,19 +158,19 @@ async def chat(request: ChatRequest):
                     f"Time:  {booking['time']}\n"
                     f"Booking ID: {booking['id']}"
                 )
-                await memory.save(request.session_id, request.message, confirmation)
+                await memory.save(valid_session_id, request.message, confirmation)
                 return ChatResponse(
                     answer=confirmation,
-                    session_id=request.session_id,
+                    session_id=valid_session_id,
                     mode="booking",
                     booking=booking,
                 )
             else:
                 error_msg = f"Booking failed: {result.get('error', 'Unknown error')}"
-                await memory.save(request.session_id, request.message, error_msg)
+                await memory.save(valid_session_id, request.message, error_msg)
                 return ChatResponse(
                     answer=error_msg,
-                    session_id=request.session_id,
+                    session_id=valid_session_id,
                     mode="booking",
                     booking=None,
                 )
@@ -176,8 +188,17 @@ async def chat(request: ChatRequest):
 @router.get("/history/{session_id}")
 async def get_chat_history(session_id: str):
     """Return the last 20 messages for this session from Redis."""
-    history = await memory.get_history(session_id, limit=20)
-    return {"session_id": session_id, "history": history}
+    valid_session_id = _validate_session_id(session_id)
+    history = await memory.get_history(valid_session_id, limit=20)
+    return {"session_id": valid_session_id, "history": history}
+
+
+@router.delete("/history/{session_id}")
+async def delete_chat_history(session_id: str):
+    """Delete all stored Redis chat history for a session."""
+    valid_session_id = _validate_session_id(session_id)
+    await memory.clear_history(valid_session_id)
+    return {"message": "Chat history deleted", "session_id": valid_session_id}
 
 
 @router.get("/bookings")
