@@ -31,12 +31,17 @@ GET /chat/bookings (for get all booking )
 Install dependencies:
 pip install -r requirements.txt
 
-.env:
-QDRANT_URL=...,
-QDRANT_API_KEY=...,
-GOOGLE_API_KEY=...,
-GROQ_API_KEY=...,
+## Environment Variables
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+QDRANT_URL=...
+QDRANT_API_KEY=...
+GOOGLE_API_KEY=...
+GROQ_API_KEY=...
 REDIS_URL=redis://user:pass@host:port
+```
 
 Run the server:
 uvicorn main:app --reload
