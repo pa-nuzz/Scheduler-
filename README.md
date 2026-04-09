@@ -21,6 +21,7 @@ This is a FastAPI backend for document-based AI chat plus interview scheduling. 
 **Full Demo (3:40)** — Watch the complete walkthrough:
 
 [▶️ Watch Video](./Untitled.mp4)
+https://youtu.be/vDg4JVg5bu4
 
 ### Tech Stack
 - Fastapi - (api framework)
