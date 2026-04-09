@@ -16,7 +16,9 @@ This is a FastAPI backend for document-based AI chat plus interview scheduling. 
 ## Architecture
 ![alt text](palmarchi.png)
 
-<video controls src="Screen Recording 2026-04-09 at 4.34.39 PM.mov" title="Title"></video>
+## Demo video
+<video controls src="Untitled.mov" title="Title"></video>
+
 ### Tech Stack
 - Fastapi - (api framework)
 - sqlite - (metadata and booking)
