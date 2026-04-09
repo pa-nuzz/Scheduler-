@@ -1,6 +1,5 @@
 import os
 import uuid
-import shutil
 import asyncio
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from typing import Literal, cast
@@ -18,6 +17,16 @@ chunker = ChunkerService()
 embedder = EmbedderService()
 vector_store = VectorStoreService()
 
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+UPLOAD_READ_TIMEOUT_SECONDS = 30
+TEXT_EXTRACTION_TIMEOUT_SECONDS = 60
+CHUNKING_TIMEOUT_SECONDS = 30
+
+
+def _write_temp_file(path: str, content: bytes) -> None:
+    with open(path, "wb") as f:
+        f.write(content)
+
 
 @router.post("/upload")
 async def upload_document(
@@ -27,36 +36,66 @@ async def upload_document(
     """
     Upload a PDF or TXT file
     """
-    filename = (file.filename or "").strip()
+    filename = os.path.basename((file.filename or "").strip())
     if not filename:
         raise HTTPException(status_code=400, detail="Filename is required.")
 
-    if not (filename.endswith(".pdf") or filename.endswith(".txt")):
+    extension = os.path.splitext(filename)[1].lower()
+    if extension not in {".pdf", ".txt"}:
         raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported.")
 
 
     temp_path = f"/tmp/{uuid.uuid4()}_{filename}"
 
     try:
-        # Save uploaded file temporarily
-        with open(temp_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+        try:
+            file_bytes = await asyncio.wait_for(file.read(), timeout=UPLOAD_READ_TIMEOUT_SECONDS)
+        except asyncio.TimeoutError:
+            raise HTTPException(status_code=408, detail="Upload read timed out. Please retry.")
+
+        if not file_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+        if len(file_bytes) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail="File is too large (max 10 MB). Upload a smaller PDF/TXT file.",
+            )
+
+        await asyncio.to_thread(_write_temp_file, temp_path, file_bytes)
 
         # extract text
-        if filename.endswith(".pdf"):
-            text = extract_text_from_pdf(temp_path)
+        if extension == ".pdf":
+            try:
+                text = await asyncio.wait_for(
+                    asyncio.to_thread(extract_text_from_pdf, temp_path),
+                    timeout=TEXT_EXTRACTION_TIMEOUT_SECONDS,
+                )
+            except asyncio.TimeoutError:
+                raise HTTPException(status_code=504, detail="PDF text extraction timed out.")
         else:
-            with open(temp_path, "r", encoding="utf-8") as f:
-                text = f.read()
+            try:
+                text = file_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                raise HTTPException(status_code=400, detail="TXT file must be valid UTF-8.")
 
         if not text.strip():
             raise HTTPException(status_code=400, detail="No text could be extracted from the file.")
 
         # chunkinf the text
-        if strategy == "semantic":
-            chunks = chunker.semantic_chunking(text)
-        else:
-            chunks = chunker.recursive_chunking(text)
+        try:
+            if strategy == "semantic":
+                chunks = await asyncio.wait_for(
+                    asyncio.to_thread(chunker.semantic_chunking, text),
+                    timeout=CHUNKING_TIMEOUT_SECONDS,
+                )
+            else:
+                chunks = await asyncio.wait_for(
+                    asyncio.to_thread(chunker.recursive_chunking, text),
+                    timeout=CHUNKING_TIMEOUT_SECONDS,
+                )
+        except asyncio.TimeoutError:
+            raise HTTPException(status_code=504, detail="Text chunking timed out. Please upload a smaller file.")
 
         if not chunks:
             raise HTTPException(status_code=400, detail="No chunks were created from the file text.")
@@ -104,6 +143,7 @@ async def upload_document(
         }
 
     finally:
+        await file.close()
         if os.path.exists(temp_path):
             os.remove(temp_path)
 

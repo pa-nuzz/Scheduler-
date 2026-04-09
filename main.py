@@ -6,7 +6,7 @@ import contextlib
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create SQLite tables on startup if they don't exist
+    
     await init_db()
     yield
 

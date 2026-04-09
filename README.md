@@ -12,9 +12,11 @@ This is a FastAPI backend for document-based AI chat plus interview scheduling. 
    - **RAG Mode**: Ask questions about uploaded document.The system retrieves relevant chunks info and generate answers.
    - **Booking Mode**: Book interviews via llm. It  extracts name, email, date, and time.
 
+
 ## Architecture
 ![alt text](palmarchi.png)
 
+<video controls src="Screen Recording 2026-04-09 at 4.34.39 PM.mov" title="Title"></video>
 ### Tech Stack
 - Fastapi - (api framework)
 - sqlite - (metadata and booking)

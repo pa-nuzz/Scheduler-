@@ -27,15 +27,28 @@ class EmbedderService:
         raise RuntimeError("Embedding response did not contain vector values")
 
     async def get_embeddings(self, text_chunks: List[str]) -> List[List[float]]:
-        embeddings = []
-        for chunk in text_chunks:
-            result = await asyncio.to_thread(
-                self.client.models.embed_content,
-                model=self.embedding_model,
-                contents=chunk,
-            )
-            embeddings.append(self._extract_embedding(result))
-        return embeddings
+        """Embed all chunks in one batch API call for speed."""
+        if not text_chunks:
+            return []
+        
+        # Batch call - much faster than individual calls
+        result = await asyncio.to_thread(
+            self.client.models.embed_content,
+            model=self.embedding_model,
+            contents=text_chunks,
+        )
+        
+        # Extract embeddings from batch response
+        embeddings = getattr(result, "embeddings", None)
+        if embeddings:
+            return [list(getattr(e, "values", [])) for e in embeddings]
+        
+        # Fallback for single response
+        single = getattr(result, "embedding", None)
+        if single:
+            return [list(getattr(single, "values", []))]
+        
+        raise RuntimeError("Batch embedding failed")
 
     async def get_query_embedding(self, text: str) -> List[float]:
         result = await asyncio.to_thread(
